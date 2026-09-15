@@ -10,7 +10,7 @@ Arduino Uno Q reads a JSON file and shows whether it is authorized on a Modulino
 
 - `MCU/auth_status/auth_status.ino` — MCU sketch; exposes `set_status(int)` over the RPC bridge and drives the Pixels.
 - `MPU/check_auth.py` — runs on the Uno Q Linux side; reads the JSON and calls `set_status`.
-- `MPU/rpc_base.py` — MessagePack-RPC client for `arduino-router`, from [DerrickJ1612/snapdragon-mcp-arduino](https://github.com/DerrickJ1612/snapdragon-mcp-arduino).
+- `MPU/rpc_base.py` — MessagePack-RPC client for `arduino-router`, from [DerrickJ1612/snapdragon-mcp-arduino](https://github.com/DerrickJ1612/snapdragon-mcp-arduino) (MIT, see `THIRD_PARTY_NOTICES.md`).
 - `MPU/samples/` — test files.
 
 ## Setup (from Windows, board on COM5)
