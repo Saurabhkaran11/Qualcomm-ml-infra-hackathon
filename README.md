@@ -20,6 +20,23 @@ JSON file ──► check_auth.py (Linux/MPU) ──RPC "set_status"──► ar
 3. The router forwards it to the MCU, where the sketch registered `set_status` with `Bridge.provide`.
 4. The sketch sets all 8 Pixels green or red and returns the value back to Linux.
 
+## AI demo over MCP
+
+A local Qwen 3 model on a Snapdragon X Elite drives the board through MCP:
+
+```
+Qwen 3 / GenieX (X Elite) ──► x_elite/client.py ──MCP over adb stdio──► MPU/mcp_server.py (Uno Q Linux)
+                                                                          └─► RPC ─► MCU ─► Pixels
+```
+
+Tools the model can call:
+
+- `check_file(path)` — read a JSON file on the board, decide authorized, set the light.
+- `set_light(authorized)` — force the Pixels green or red.
+
+`mcp_server.py` uses only the Python standard library (the Uno Q has no pip) and is verified against
+the official MCP SDK by `scripts/test_mcp_server.py`. See `COMMANDS.md` section 8.
+
 ## Hardware
 
 - Arduino UNO Q
@@ -30,7 +47,10 @@ JSON file ──► check_auth.py (Linux/MPU) ──RPC "set_status"──► ar
 - `MCU/auth_status/auth_status.ino` — MCU sketch; exposes `set_status(int)` over the RPC bridge and drives the Pixels.
 - `MPU/check_auth.py` — runs on the Uno Q Linux side; reads the JSON and calls `set_status`.
 - `MPU/rpc_base.py` — MessagePack-RPC client for `arduino-router`, from [DerrickJ1612/snapdragon-mcp-arduino](https://github.com/DerrickJ1612/snapdragon-mcp-arduino) (MIT, see `THIRD_PARTY_NOTICES.md`).
+- `MPU/mcp_server.py` — MCP server on the Uno Q Linux side; exposes `check_file` and `set_light`.
 - `MPU/samples/` — test files.
+- `x_elite/client.py` — Snapdragon X Elite chat client: GenieX (Qwen 3) + the MCP tools above.
+- `scripts/test_mcp_server.py` — self-check for the MCP server against the real board.
 
 ## Setup (from Windows, board on COM5)
 

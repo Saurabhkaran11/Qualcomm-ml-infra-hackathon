@@ -15,7 +15,8 @@ def is_authorized(path):
         with open(path) as f:
             data = json.load(f)
     except (OSError, ValueError) as exc:
-        print(f"cannot read {path}: {exc}")
+        # stderr: stdout is the MCP stdio channel when mcp_server.py imports this
+        print(f"cannot read {path}: {exc}", file=sys.stderr)
         return False
     return isinstance(data, dict) and str(data.get("status", "")).lower() == "authorized"
 

@@ -96,6 +96,43 @@ Lists the files on the board.
 ```
 Prints `active` when the Linux↔MCU router is running.
 
+## 8. AI demo over MCP (Snapdragon X Elite)
+
+Push the MCP server to the board (from the PC that has the board on USB):
+
+```powershell
+& $adb push MPU/mcp_server.py /home/arduino/rpc/
+```
+
+Verify it end to end against the real hardware:
+
+```powershell
+python scripts/test_mcp_server.py
+```
+Prints `all MCP server checks passed`.
+
+On the X Elite laptop (board plugged into it, `adb` available), install the client:
+
+```powershell
+pip install -r x_elite/requirements.txt
+```
+
+Start GenieX in one terminal and keep it running:
+
+```powershell
+geniex pull qualcomm/Qwen3-4B-Instruct-2507
+```
+```powershell
+geniex serve
+```
+
+In a second terminal, start the chat client:
+
+```powershell
+python -m x_elite.client
+```
+Then type `check samples/authorized.json` or `turn the light red`, and the Pixels react.
+
 ## If something fails
 
 - `arduino-cli` not recognized → close and reopen the terminal (PATH refresh after install).
