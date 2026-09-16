@@ -1,0 +1,14 @@
+{
+  "frame": 2077,
+  "people": [
+    { "id": "user-001", "status": "authorized",   "box": [ 20, 120, 80, 200] },
+    { "id": "user-002", "status": "authorized",   "box": [110, 120, 80, 200] },
+    { "id": "unknown",  "status": "unauthorized", "box": [200, 120, 80, 200] },
+    { "id": "user-004", "status": "authorized",   "box": [290, 120, 80, 200] },
+    { "id": "user-005", "status": "authorized",   "box": [380, 120, 80, 200] },
+    { "id": "unknown",  "status": "unauthorized", "box": [470, 120, 80, 200] },
+    { "id": "user-007", "status": "authorized",   "box": [560, 120, 80, 200] },
+    { "id": "user-008", "status": "authorized",   "box": [650, 120, 80, 200] },
+    { "id": "user-009", "status": "authorized",   "box": [740, 120, 80, 200] }
+  ]
+}

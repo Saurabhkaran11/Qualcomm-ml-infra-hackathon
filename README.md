@@ -1,11 +1,25 @@
 # Qualcomm ML Infra Hackathon — Authorization Status Light (MCP branch)
 
-Arduino Uno Q reads a JSON file and shows whether it is authorized on a Modulino Pixels strip.
+Arduino Uno Q reads a JSON camera result and shows **one LED per person** on the 8 Modulino Pixels.
 On this branch a local Qwen 3 model on a Snapdragon X Elite drives the board through **MCP**.
 
-- `"status": "authorized"` → green (1 flash, then solid)
-- anything else (other status, bad JSON, missing file) → red (3 flashes, then solid)
+- green = that person is authorized, red = not authorized
+- LEDs run left-to-right in frame order (sorted by the `box` x coordinate)
+- unused LEDs stay off, so the people count is readable at a glance
+- more than 8 people → first 8 shown, the overflow is reported in the text
 - blue = idle, blinking violet = Linux↔MCU bridge failed
+
+Input shape (the single-person `{"status": "authorized"}` form still works):
+
+```json
+{ "frame": 1042, "people": [
+  { "id": "user-001", "status": "authorized",   "box": [ 40, 120, 90, 200] },
+  { "id": "unknown",  "status": "unauthorized", "box": [180, 130, 95, 210] }
+]}
+```
+
+Anything that is not exactly `"authorized"` — `unknown`, a missing field, bad JSON, a missing file —
+counts as unauthorized, so a bad input can never open the door.
 
 ## Demo in three terminals (X Elite, Uno Q on USB)
 
@@ -36,6 +50,8 @@ Full command list, including first-time setup: `COMMANDS.md`.
 |---|---|
 | MCU sketch → Modulino Pixels | ✅ on hardware |
 | `check_auth.py` → RPC → MCU | ✅ on hardware |
+| Multi-person frames (mixed, 9-person crowd, empty) | ✅ on hardware |
+| JSON parsing, sorting, overflow, bad input | ✅ `scripts/test_check_auth.py` (no hardware needed) |
 | `mcp_server.py` (handshake, both tools, error paths) | ✅ `scripts/test_mcp_server.py`, and against the official MCP SDK client |
 | `x_elite/client.py` → GenieX/Qwen 3 | ⏳ needs a Snapdragon X Elite with GenieX |
 
@@ -48,10 +64,11 @@ the `arduino-router` service using MessagePack-RPC messages.
 JSON file ──► check_auth.py (Linux/MPU) ──RPC "set_status"──► arduino-router ──► auth_status.ino (MCU) ──► Modulino Pixels
 ```
 
-1. `check_auth.py` reads the JSON file and decides authorized (1) or unauthorized (0).
-2. `rpc_base.py` sends the call `set_status(1 or 0)` to the router socket `/var/run/arduino-router.sock`.
-3. The router forwards it to the MCU, where the sketch registered `set_status` with `Bridge.provide`.
-4. The sketch sets all 8 Pixels green or red and returns the value back to Linux.
+1. `check_auth.py` reads the JSON, sorts the people left-to-right and packs them into a bitmask
+   (bit *i* set = person *i* authorized).
+2. `rpc_base.py` sends `set_people(count, mask)` to the router socket `/var/run/arduino-router.sock`.
+3. The router forwards it to the MCU, where the sketch registered `set_people` with `Bridge.provide`.
+4. The sketch lights LED *i* green or red for each person, leaves the rest off, and returns the count.
 
 ## AI demo over MCP
 
