@@ -17,6 +17,58 @@ Every command is PowerShell, run from the repo root.
 
 ---
 
+## FIRST: which situation are you in?
+
+**The board is NOT plugged into this laptop.** It is connected by USB to a different Windows
+machine, and you reach it over Wi-Fi. This is the normal case for this project.
+
+| Step | Run it? |
+|---|---|
+| 1 — get the code | **yes** |
+| 2 — Python | **yes** |
+| 3 — Arduino CLI / adb | **skip** (only needed for a USB-attached board) |
+| 4 — GenieX | only if the model should drive the board |
+| 5 — camera deps | only if you do not already have a runtime |
+| 6a — USB | **skip — there is no cable to this laptop** |
+| 6b — Wi-Fi | **yes**, plus the SSH key step below |
+| 7 — flash firmware / copy board files | **skip — already done on the machine holding the board** |
+| 8 — verify | **yes**, using the `BOARD_TARGET="net"` variant |
+| 9 — send your detector's output | **yes — this is the deliverable** |
+
+Do not try to flash firmware, run `adb`, or push files to the board. There is no cable here;
+those steps are owned by the machine the board is plugged into.
+
+### Two prerequisites the board's owner must do for you
+
+Report back if either is missing — you cannot fix them from this laptop:
+
+1. **The board must be on the same Wi-Fi network as this laptop.** Someone joins it to your
+   network from the machine it is plugged into (it needs the Wi-Fi password typed by a human).
+2. **Your SSH public key must be installed on the board.** Our tools use key-based auth and
+   never prompt for a password. Generate a key and send the **public** half (`.pub` — safe to
+   share; never send the private one):
+
+```powershell
+ssh-keygen -t ed25519 -C "snapdragon"
+```
+```powershell
+type $env:USERPROFILE\.ssh\id_ed25519.pub
+```
+
+Send that single line to whoever holds the board; they install it and confirm.
+
+Then verify — this is your gate, do not proceed past it:
+
+```powershell
+$env:BOARD_TARGET="net"; python scripts/check_link.py; Remove-Item Env:\BOARD_TARGET
+```
+Expect `CONNECTED  (over ssh (SCL-UNOQ05.local))`. Anything else: report the full output.
+
+**If instead the board IS plugged into this laptop**, ignore this section and run every step
+in order.
+
+---
+
 ## The contract (the only thing your code must produce)
 
 ```json
@@ -146,7 +198,7 @@ python -c "import cv2; c=cv2.VideoCapture(0); print('camera ok' if c.isOpened() 
 
 ## 6. Connect the board
 
-### 6a. USB (do this first — it is the fallback and needs no network)
+### 6a. USB (only if the board is plugged into THIS laptop)
 
 Plug the Uno Q in with a **data** USB-C cable.
 
@@ -185,6 +237,9 @@ python scripts/board_link.py
 ```
 
 ## 7. Put the board-side files in place (once per board)
+
+> **Skip this whole step if the board is not plugged into this laptop.** It is done once, from
+> the machine holding the board.
 
 ```powershell
 & $adb shell mkdir -p /home/arduino/rpc/samples
@@ -287,6 +342,8 @@ Then type `check samples/frame_5people.json` or `turn the light red`.
 | `adb: no devices/emulators found` | `& $adb kill-server` then `& $adb start-server`; check the board is not plugged into another computer |
 | `board not found on any route` | USB unplugged, or the two devices are on different networks |
 | Network route fails but USB works | Client isolation on the Wi-Fi, a VPN on this laptop, or different subnets |
+| `Permission denied (publickey)` | Your SSH public key is not on the board yet — send the `.pub` line to the board's owner |
+| mDNS name does not resolve | The board is on a different Wi-Fi; or set `BOARD_HOST=<ip>` as a temporary override |
 | Pixels blink violet | Linux↔MCU bridge failed — power-cycle the board |
 | `CONNECTED` but no lights or sound | Modulino Pixels/Buzzer not plugged into the Qwiic connector |
 | `Timed out waiting for 'set_people'` | Firmware not running — redo the flash in step 7 |
@@ -294,7 +351,8 @@ Then type `check samples/frame_5people.json` or `turn the light red`.
 
 ## Report back
 
-1. Output of `python scripts/check_link.py`.
-2. Output of the `BOARD_TARGET="net"` variant, if setting up the Wi-Fi link.
+1. Your SSH **public** key line, if the board lives on another machine and the key is not
+   installed yet.
+2. Output of `$env:BOARD_TARGET="net"; python scripts/check_link.py`.
 3. One real sample of the detector's JSON output.
 4. Any failure: the command and its full output, verbatim.
