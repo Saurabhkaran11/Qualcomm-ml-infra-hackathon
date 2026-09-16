@@ -11,14 +11,15 @@ Then ask e.g. "check samples/authorized.json" or "turn the light red".
 import asyncio
 import json
 import os
+import sys
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 from openai import OpenAI
 
-ADB = os.environ.get(
-    "ADB", os.path.expandvars(r"%LOCALAPPDATA%\Arduino15\packages\arduino\tools\adb\32.0.0\adb.exe")
-)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "scripts"))
+from board_link import connect  # noqa: E402
+
 REMOTE = "cd /home/arduino/rpc && MSGPACK_PUREPYTHON=1 python3 mcp_server.py"
 BASE_URL = os.environ.get("GENIEX_URL", "http://127.0.0.1:18181/v1")
 MODEL = os.environ.get("GENIEX_MODEL", "qualcomm/Qwen3-4B-Instruct-2507")
@@ -31,10 +32,16 @@ SYSTEM = (
 
 
 async def chat():
-    server = StdioServerParameters(command=ADB, args=["shell", REMOTE])
+    link = connect()  # usb, then the board's mDNS name — no IP to configure
+    if not link:
+        raise SystemExit("board not found. run: python scripts/check_link.py")
+
+    argv = link.shell_argv(REMOTE)
+    server = StdioServerParameters(command=argv[0], args=argv[1:])
     async with stdio_client(server) as (read, write), ClientSession(read, write) as session:
         await session.initialize()
         tools = (await session.list_tools()).tools
+        print(f"board reached over {link.describe()}")
         schema = [
             {
                 "type": "function",

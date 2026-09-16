@@ -124,18 +124,42 @@ Expect one line ending in `device`.
 
 ### 6b. Over Wi-Fi (the two-device link)
 
-1. Turn on your **phone hotspot** (not the venue Wi-Fi) and connect this laptop to it.
-2. Connect the Uno Q's Linux side to the same hotspot.
-3. In the hotspot settings, make sure **client isolation** is OFF, or the devices cannot see
-   each other.
+**There is no IP address to configure.** The board runs mDNS, so it is reachable by name:
 
-Find the board's IP (with the board still on USB, this asks the board itself):
-
-```powershell
-& $adb shell "ip -4 addr show scope global | grep -oP '(?<=inet )[0-9.]+'"
+```text
+SCL-UNOQ05.local
 ```
 
-**Send that IP address back** — the Wi-Fi link is built around it.
+That name keeps working when the IP changes, when you switch Wi-Fi, or on a phone hotspot.
+`scripts/board_link.py` finds the board on its own: USB first, then the mDNS name. Nothing in
+the project stores an address.
+
+What you do need:
+
+1. This laptop and the board on the **same Wi-Fi network**.
+2. **Client isolation OFF** on that network — most venue and guest networks block devices from
+   seeing each other, and that cannot be fixed from our side. A phone hotspot you control avoids it.
+3. **No VPN running** on this laptop — VPNs capture local traffic too.
+
+To join the board to a network, plug it into USB and run (substituting your own details —
+type the password yourself, do not paste it into chat):
+
+```powershell
+& $adb shell 'ID=$(wpa_cli -i wlan0 add_network | tail -1); wpa_cli -i wlan0 set_network $ID ssid "\"YOUR_SSID\""; wpa_cli -i wlan0 set_network $ID psk "\"YOUR_PASSWORD\""; wpa_cli -i wlan0 enable_network $ID; wpa_cli -i wlan0 select_network $ID; wpa_cli -i wlan0 save_config'
+```
+
+The board remembers every network you add and joins whichever is in range, so adding your
+hotspot once makes it work at the venue and anywhere else.
+
+Check which route is live at any time:
+
+```powershell
+python scripts/board_link.py
+```
+```powershell
+$env:BOARD_TARGET="net"; python scripts/board_link.py; Remove-Item Env:\BOARD_TARGET
+```
+The second forces the network path, ignoring USB — that is how you prove the Wi-Fi link works.
 
 ---
 
@@ -185,8 +209,10 @@ It checks every link in the chain and then makes the board react, so you can see
 result. **Watch the board while it runs.** Success looks like this:
 
 ```text
-[ok]   adb found
-[ok]   board visible to adb: 4208084015
+looking for the board (BOARD_TARGET=auto)
+  found: usb
+[ok]   reached the board over usb (4208084015)
+[ok]   board says its name is SCL-UNOQ05
 [ok]   arduino-router is running
 [ok]   board-side python is in place
 
@@ -196,11 +222,19 @@ result. **Watch the board while it runs.** Success looks like this:
 [ok]   UNAUTHORIZED - 5 detected: 3 authorized, 2 denied
        expect: 3 GREEN + 2 RED leds, X flashing twice, 2 beeps
 
-CONNECTED
+CONNECTED  (over usb (4208084015))
 ```
 
 Anything else stops at the first broken link and names the fix, ending in `NOT CONNECTED`.
 **Send that output back** — it says exactly where the chain breaks.
+
+To prove the **network** link specifically (ignores USB entirely):
+
+```powershell
+$env:BOARD_TARGET="net"; python scripts/check_link.py; Remove-Item Env:\BOARD_TARGET
+```
+A `CONNECTED (over ssh (SCL-UNOQ05.local))` line means the two devices are talking over Wi-Fi
+with no cable and no cloud.
 
 Three levels of proof, in order of strength:
 
@@ -258,6 +292,6 @@ file — it would install into the wrong environment or shadow a working runtime
 ## Send back
 
 1. The output of `python scripts/check_link.py`.
-2. The board's **IP address** from step 6b.
+2. The output of the `BOARD_TARGET="net"` variant, if you are setting up the Wi-Fi link.
 3. One sample of the detector's JSON output, if there is a detection pipeline already.
 4. Any error text, verbatim.

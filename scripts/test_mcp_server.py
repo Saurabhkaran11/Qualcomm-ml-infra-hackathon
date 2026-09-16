@@ -10,15 +10,21 @@ import os
 import subprocess
 import sys
 
-ADB = os.environ.get(
-    "ADB", os.path.expandvars(r"%LOCALAPPDATA%\Arduino15\packages\arduino\tools\adb\32.0.0\adb.exe")
-)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from board_link import connect  # noqa: E402
+
 REMOTE = "cd /home/arduino/rpc && MSGPACK_PUREPYTHON=1 python3 mcp_server.py"
 
 
 def main():
+    link = connect()
+    if not link:
+        sys.exit("board not found. run: python scripts/check_link.py")
+    print(f"board reached over {link.describe()}")
+
     proc = subprocess.Popen(
-        [ADB, "shell", REMOTE],
+        link.shell_argv(REMOTE),
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         text=True,
