@@ -13,7 +13,7 @@ Run it from the AI host over adb:
 import json
 import sys
 
-from check_auth import is_authorized
+from check_auth import PIXELS, to_mask, verdict
 from rpc_base import ArduinoBridge
 
 PROTOCOL_VERSION = "2025-06-18"
@@ -22,8 +22,9 @@ TOOLS = [
     {
         "name": "check_file",
         "description": (
-            "Read a JSON authorization file on the Arduino Uno Q and show the result on the "
-            "Modulino Pixels: green if the file says status 'authorized', red otherwise."
+            "Read a JSON camera result on the Arduino Uno Q and show it on the 8 Modulino Pixels: "
+            "one LED per detected person, leftmost first, green if authorized and red if not. "
+            "The buzzer beeps once per refused person and stays silent when all are cleared."
         ),
         "inputSchema": {
             "type": "object",
@@ -50,11 +51,11 @@ TOOLS = [
 ]
 
 
-def show(authorized):
+def show(people):
     """Drive the MCU. One short-lived bridge per call keeps the socket state simple."""
     bridge = ArduinoBridge()
     try:
-        bridge.call("set_status", int(authorized))
+        bridge.call("set_people", min(len(people), PIXELS), to_mask(people))
     finally:
         bridge.close()
 
@@ -62,15 +63,15 @@ def show(authorized):
 def call_tool(name, args):
     if name == "check_file":
         path = args["path"]
-        authorized = is_authorized(path)
-        show(authorized)
-        status = "AUTHORIZED" if authorized else "UNAUTHORIZED"
-        color = "green" if authorized else "red"
-        return f"{path}: {status}. Modulino Pixels set to {color}."
+        people, denied, summary = verdict(path)
+        show(people)
+        lights = f"{len(people) - denied} green, {denied} red" if people else "all off"
+        beeps = f"{denied} beep(s)" if denied else "silent"
+        return f"{path}: {summary}. Pixels {lights}, {beeps}."
 
     if name == "set_light":
         authorized = bool(args["authorized"])
-        show(authorized)
+        show([authorized])
         return f"Modulino Pixels set to {'green' if authorized else 'red'}."
 
     raise ValueError(f"unknown tool: {name}")

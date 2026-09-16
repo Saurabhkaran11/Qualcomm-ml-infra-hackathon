@@ -1,0 +1,11 @@
+{
+  "frame": 9440,
+  "people": [
+    { "id": "user-002", "status": "authorized",   "box": [ 30, 120, 82, 200], "confidence": 0.95 },
+    { "id": "user-009", "status": "authorized",   "box": [140, 119, 82, 201], "confidence": 0.93 },
+    { "id": "unknown",  "status": "unauthorized", "box": [250, 123, 82, 197], "confidence": 0.51 },
+    { "id": "user-017", "status": "authorized",   "box": [360, 121, 82, 199], "confidence": 0.96 },
+    { "id": "unknown",  "status": "unknown",      "box": [470, 118, 82, 202], "confidence": 0.38 },
+    { "id": "user-025", "status": "authorized",   "box": [580, 122, 82, 198], "confidence": 0.91 }
+  ]
+}

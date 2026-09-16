@@ -1,0 +1,8 @@
+{
+  "frame": 5150,
+  "people": [
+    { "id": "user-001", "status": "authorized", "box": [ 60, 120, 85, 200], "confidence": 0.96 },
+    { "id": "user-014", "status": "authorized", "box": [220, 118, 84, 202], "confidence": 0.94 },
+    { "id": "user-022", "status": "authorized", "box": [380, 122, 86, 198], "confidence": 0.92 }
+  ]
+}

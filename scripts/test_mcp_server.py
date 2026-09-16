@@ -39,18 +39,22 @@ def main():
 
         ok = rpc(3, "tools/call", {"name": "check_file", "arguments": {"path": "samples/authorized.json"}})
         text = ok["result"]["content"][0]["text"]
-        assert not ok["result"]["isError"] and "AUTHORIZED" in text and "green" in text, ok
+        assert not ok["result"]["isError"] and "Pixels 1 green, 0 red, silent" in text, ok
 
-        bad = rpc(4, "tools/call", {"name": "check_file", "arguments": {"path": "samples/nope.json"}})
-        assert "UNAUTHORIZED" in bad["result"]["content"][0]["text"], bad
+        five = rpc(4, "tools/call", {"name": "check_file", "arguments": {"path": "samples/frame_5people.json"}})
+        text = five["result"]["content"][0]["text"]
+        assert "3 authorized, 2 denied" in text and "Pixels 3 green, 2 red, 2 beep(s)" in text, five
 
-        red = rpc(5, "tools/call", {"name": "set_light", "arguments": {"authorized": False}})
+        bad = rpc(5, "tools/call", {"name": "check_file", "arguments": {"path": "samples/nope.json"}})
+        assert "Pixels 0 green, 1 red, 1 beep(s)" in bad["result"]["content"][0]["text"], bad
+
+        red = rpc(6, "tools/call", {"name": "set_light", "arguments": {"authorized": False}})
         assert "red" in red["result"]["content"][0]["text"], red
 
-        unknown = rpc(6, "tools/call", {"name": "nope", "arguments": {}})
+        unknown = rpc(7, "tools/call", {"name": "nope", "arguments": {}})
         assert unknown["result"]["isError"], unknown
 
-        missing = rpc(7, "does/not/exist")
+        missing = rpc(8, "does/not/exist")
         assert missing["error"]["code"] == -32601, missing
     finally:
         proc.stdin.close()

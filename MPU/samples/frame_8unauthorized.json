@@ -1,0 +1,93 @@
+{
+  "frame": 8310,
+  "people": [
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        20,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.4
+    },
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        110,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.43
+    },
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        200,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.46
+    },
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        290,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.49
+    },
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        380,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.52
+    },
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        470,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.55
+    },
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        560,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.58
+    },
+    {
+      "id": "unknown",
+      "status": "unauthorized",
+      "box": [
+        650,
+        120,
+        80,
+        200
+      ],
+      "confidence": 0.61
+    }
+  ]
+}
